@@ -1,7 +1,6 @@
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.filters import Command
-from aiogram.enums import ParseMode
 
 from keyboards import get_materials_kb, get_main_menu
 from texts.messages import MATERIALS_INFO_MESSAGE
@@ -18,8 +17,7 @@ async def process_materials(callback: CallbackQuery):
     # Send materials info message
     await callback.message.edit_text(
         text=MATERIALS_INFO_MESSAGE,
-        reply_markup=get_materials_kb(),
-        parse_mode=ParseMode.HTML
+        reply_markup=get_materials_kb()
     )
 
 @router.callback_query(F.data == "basic_materials")
@@ -29,13 +27,12 @@ async def process_basic_materials(callback: CallbackQuery):
     
     # Here you would typically send files or links to basic materials
     await callback.message.edit_text(
-        text="Casino Basics:\n\n"
-             "• What are casino games and how they work\n"
-             "• Understanding odds and house edge\n"
-             "• Different types of casino games\n"
-             "• Basic casino etiquette and rules",
-        reply_markup=get_materials_kb(),
-        parse_mode=ParseMode.HTML
+        text="<b>IOST Basics:</b>\n\n"
+             "• What is IOST blockchain and its unique features\n"
+             "• Understanding IOST token utility and economics\n"
+             "• How to create and secure an IOST wallet\n"
+             "• Navigating the IOST ecosystem and applications",
+        reply_markup=get_materials_kb()
     )
 
 @router.callback_query(F.data == "advanced_materials")
@@ -45,14 +42,13 @@ async def process_advanced_materials(callback: CallbackQuery):
     
     # Here you would typically send files or links to advanced materials
     await callback.message.edit_text(
-        text="Game Strategies:\n\n"
-             "• Blackjack basic strategy\n"
-             "• Roulette betting systems\n"
-             "• Poker fundamentals\n"
-             "• Baccarat optimal play\n"
-             "• Managing your casino bankroll",
-        reply_markup=get_materials_kb(),
-        parse_mode=ParseMode.HTML
+        text="<b>Airdrop Strategies:</b>\n\n"
+             "• How to qualify for IOST airdrops\n"
+             "• Maximizing your airdrop allocation\n"
+             "• Setting up notifications for upcoming drops\n"
+             "• Security practices during airdrops\n"
+             "• Tax considerations for airdrop recipients",
+        reply_markup=get_materials_kb()
     )
 
 @router.callback_query(F.data == "strategies_materials")
@@ -62,12 +58,11 @@ async def process_strategies_materials(callback: CallbackQuery):
     
     # Here you would typically send files or links to strategies materials
     await callback.message.edit_text(
-        text="Casino Etiquette:\n\n"
-             "• Proper table game behavior\n"
-             "• Tipping protocols\n"
-             "• Interacting with dealers\n"
-             "• Dress codes at different casinos\n"
-             "• International casino customs",
-        reply_markup=get_materials_kb(),
-        parse_mode=ParseMode.HTML
+        text="<b>Binance Guide:</b>\n\n"
+             "• Creating and verifying your Binance account\n"
+             "• Setting up airdrop eligibility on Binance\n"
+             "• Trading IOST on Binance platform\n"
+             "• Using Binance Earn features with IOST\n"
+             "• Understanding Binance Launchpad participation",
+        reply_markup=get_materials_kb()
     )

@@ -51,7 +51,7 @@ async def main():
     await dp.start_polling(bot, allowed_updates=dp.resolve_used_update_types())
 
 if __name__ == "__main__":
-    logging.info("Starting World Casino Guide bot")
+    logging.info("Starting IOST Airdrop bot")
     try:
         asyncio.run(main())
     except (KeyboardInterrupt, SystemExit):

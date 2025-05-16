@@ -2,94 +2,94 @@ from config import CONFERENCE_DATE, CONFERENCE_TIME
 
 # Main messages
 WELCOME_MESSAGE = (
-    f"Welcome to the 'World Casino Guide' community!\n\n"
-    f"In this bot, you'll discover useful and up-to-date information about the world's "
-    f"top casinos, responsible gambling tips, strategies for various games, and receive "
-    f"valuable materials to enhance your knowledge about the casino industry.\n\n"
+    f"Welcome to the 'IOST Airdrop' community!\n\n"
+    f"In this bot, you'll discover useful and up-to-date information about the upcoming IOST airdrop, "
+    f"learn about the IOST blockchain technology, receive valuable materials to help you participate, "
+    f"and stay informed about the Binance-IOST partnership events.\n\n"
     f"Use the buttons below to navigate through different sections."
 )
 
 # Webinar registration messages
 CONFERENCE_REQUEST_MESSAGE = (
-    f"To receive a link to our exclusive webinar on {CONFERENCE_DATE}, "
+    f"To receive a link to our exclusive webinar on {CONFERENCE_DATE} about IOST airdrop strategies, "
     f"we need your consent to send you the invitation:"
 )
 
 CONFERENCE_INFO_MESSAGE = (
-    f"At our webinar on {CONFERENCE_DATE}, you will:\n"
-    f"• Learn from top casino industry experts\n"
-    f"• Discover all methodologies for responsible gambling\n"
-    f"• Connect with like-minded enthusiasts\n"
-    f"• Create a profitable approach to casino games\n"
-    f"• Learn secrets from experts with over 10 years of experience"
+    f"At our IOST airdrop webinar on {CONFERENCE_DATE}, you will:\n"
+    f"• Learn from top crypto experts about IOST technology\n"
+    f"• Discover effective airdrop participation strategies\n"
+    f"• Connect with IOST community members\n"
+    f"• Learn how to maximize your airdrop rewards\n"
+    f"• Get insights from crypto specialists with over 5 years of experience"
 )
 
 REGISTRATION_CONFIRMATION_MESSAGE = (
-    f"Congratulations! You've registered for the casino industry webinar with Mr. Fortune, "
+    f"Congratulations! You've registered for the IOST airdrop webinar with our crypto expert, "
     f"which will take place on {CONFERENCE_DATE}.\n"
     f"The link to join the webinar will be sent to you 24 hours and 1 hour before the start."
 )
 
-# Casino services info
+# Crypto services info
 CASINO_SERVICES_MESSAGE = (
-    f"5 services that help you navigate the casino world:\n\n"
-    f"• <b>Casino.org</b> – One of the most popular platforms for comprehensive casino reviews and ratings. "
-    f"Provides detailed information about game selections, bonuses, security measures, and user experiences "
-    f"at casinos around the world.\n\n"
-    f"• <b>Wizard of Odds</b> – A visual tool for understanding game odds and mathematics behind casino games. "
-    f"Offers strategy charts, odds calculators, and detailed explanations of house edges for informed decision-making.\n\n"
-    f"• <b>Responsible Gambling Tools</b> – Platforms that use AI and machine learning to help players "
-    f"maintain control. Features include self-assessment tests, expenditure tracking, and setting limits. "
-    f"Distinguished by high accuracy in identifying problematic patterns and user-friendly interfaces.\n\n"
-    f"• <b>Casino Compare</b> – An aggregator focused on security, reputation, and fair play. Provides analytics, "
-    f"legitimate casino listings, and verification of licenses and certifications.\n\n"
-    f"• <b>Game Advisor</b> – A powerful tool for analyzing various casino games. Allows tracking of RTP (Return to Player) percentages, "
-    f"game volatility, and trends across different platforms. Useful for finding games with the best player advantage."
+    f"5 essential tools for IOST and crypto airdrops:\n\n"
+    f"• <b>Binance Platform</b> – The main exchange partner for IOST airdrops. "
+    f"Create an account, complete KYC verification, and enable airdrop eligibility in your settings "
+    f"to participate in IOST token distributions.\n\n"
+    f"• <b>IOST Wallet</b> – The official wallet for storing and managing your IOST tokens. "
+    f"Features a user-friendly interface, staking options, and direct connection to DApps in the IOST ecosystem.\n\n"
+    f"• <b>AirdropAlert</b> – A tracking platform that provides timely notifications about upcoming airdrops. "
+    f"Subscribe to IOST-specific alerts to never miss new opportunities in the ecosystem.\n\n"
+    f"• <b>Crypto Portfolio Tracker</b> – Tools like CoinMarketCap or CoinGecko that help you monitor "
+    f"your IOST holdings, track price movements, and analyze market trends.\n\n"
+    f"• <b>IOST Explorer</b> – A blockchain explorer for the IOST network. Allows you to verify transactions, "
+    f"check wallet balances, and monitor network activity to confirm your airdrop participation."
 )
 
 # About speaker message
 SPEAKER_INFO_MESSAGE = (
-    f"<b>Mr. Fortune</b> is a casino industry expert with over 10 years of experience. "
-    f"He specializes in game theory, responsible gambling practices, and has visited "
-    f"and reviewed over 500 casinos worldwide."
+    f"<b>Our Crypto Expert</b> is a blockchain specialist with over 5 years of experience in the industry. "
+    f"They have been closely following IOST development since its inception, participated in numerous airdrops, "
+    f"and have deep knowledge of the Binance ecosystem and distribution mechanisms."
 )
 
 # Materials message
 MATERIALS_INFO_MESSAGE = (
     f"In this section, you'll find useful materials to develop your knowledge "
-    f"about casinos and responsible gambling."
+    f"about IOST blockchain, airdrops, and how to participate effectively."
 )
 
-# Top casinos message
+# IOST information message
 TOP_CASINOS_MESSAGE = (
-    f"<b>Top 5 Casinos Worth Visiting:</b>\n\n"
-    f"1. <b>Casino de Monte-Carlo, Monaco</b>\n"
-    f"The epitome of luxury gambling, this historic casino has been featured in multiple James Bond films. "
-    f"Known for its elegant architecture, high-stakes tables, and exclusive atmosphere.\n\n"
-    f"2. <b>Bellagio, Las Vegas, USA</b>\n"
-    f"Famous for its dancing fountains and art gallery, the Bellagio offers a high-end gaming experience "
-    f"with over 2,300 slot machines and 40 poker tables. Its poker room is one of the most renowned in the world.\n\n"
-    f"3. <b>Marina Bay Sands, Singapore</b>\n"
-    f"This architectural marvel features the world's largest rooftop infinity pool and a massive gaming floor "
-    f"spanning 15,000 square meters with over 600 table games and 1,500 slot machines.\n\n"
-    f"4. <b>Caesars Palace, Las Vegas, USA</b>\n"
-    f"A Roman-themed luxury hotel and casino offering 185,000 square feet of gaming space with classic and "
-    f"modern games. Home to major poker tournaments and high-limit gaming areas.\n\n"
-    f"5. <b>Venetian Macao, Macau, China</b>\n"
-    f"The largest casino in the world with 550,000 square feet of gaming space. Features 3,400 slot machines "
-    f"and 800 gaming tables spread across 4 themed gaming areas."
+    f"<b>Key Information About IOST:</b>\n\n"
+    f"1. <b>What is IOST?</b>\n"
+    f"IOST (Internet of Services Token) is a high-performance blockchain network built to support "
+    f"decentralized applications and services with high transaction throughput. It uses a unique "
+    f"consensus mechanism called 'Proof of Believability' that balances efficiency and security.\n\n"
+    f"2. <b>IOST Tokenomics</b>\n"
+    f"IOST token is used for transaction fees, staking, governance voting, and as a medium of exchange "
+    f"within the ecosystem. With a focused supply management strategy, IOST aims to maintain value while expanding adoption.\n\n"
+    f"3. <b>IOST-Binance Partnership</b>\n"
+    f"The collaboration with Binance provides IOST with greater liquidity, exposure to millions of users, "
+    f"and participation in Binance Launchpad programs, benefiting both communities.\n\n"
+    f"4. <b>DApps on IOST</b>\n"
+    f"The IOST ecosystem hosts numerous decentralized applications spanning DeFi, gaming, social networks, "
+    f"and utility services, creating multiple use cases for token holders.\n\n"
+    f"5. <b>IOST Roadmap</b>\n"
+    f"Current development focuses on cross-chain interoperability, Layer-2 scaling solutions, "
+    f"expanding the DeFi ecosystem, and enterprise blockchain adoption."
 )
 
-# Responsible gambling message
+# Airdrop guidelines message
 RESPONSIBLE_GAMBLING_MESSAGE = (
-    f"<b>Responsible Gambling Guidelines:</b>\n\n"
-    f"• Set a budget before you start and stick to it\n"
-    f"• View gambling as entertainment, not as a way to make money\n"
-    f"• Take regular breaks during gambling sessions\n"
-    f"• Don't chase losses – accept them as part of the cost of entertainment\n"
-    f"• Never gamble when stressed, depressed, or under the influence\n"
-    f"• Balance gambling with other activities and hobbies\n"
-    f"• Learn and understand the rules and odds of the games you play\n\n"
-    f"If you feel gambling is becoming a problem, contact organizations like <b>GamCare</b>, "
-    f"<b>Gamblers Anonymous</b>, or use casino self-exclusion programs."
+    f"<b>IOST Airdrop Participation Guidelines:</b>\n\n"
+    f"• Complete KYC verification on Binance before the snapshot date\n"
+    f"• Hold the minimum required amount of IOST in your Binance account\n"
+    f"• Don't withdraw your tokens during the holding period\n"
+    f"• Follow official IOST and Binance social media channels for announcements\n"
+    f"• Watch for phishing attempts—official communications come only through verified channels\n"
+    f"• Consider staking your IOST for additional airdrop allocations\n"
+    f"• Keep your account security settings up to date\n\n"
+    f"Remember that cryptocurrency investments involve risk. Never invest more than you can afford to lose, "
+    f"and always conduct your own research before participating in any token offering or airdrop event."
 )

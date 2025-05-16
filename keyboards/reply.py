@@ -5,12 +5,11 @@ from aiogram.utils.keyboard import InlineKeyboardBuilder
 def get_main_menu() -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     
-    kb.button(text="About the Webinar", callback_data="conference_info")
-    kb.button(text="About the Speaker", callback_data="speaker_info")
-    kb.button(text="Useful Materials", callback_data="materials")
-    kb.button(text="Top 5 Casinos", callback_data="top_casinos")
-    kb.button(text="Casino Services", callback_data="trading_services")
-    kb.button(text="Responsible Gambling", callback_data="responsible_gambling")
+    kb.button(text="About the IOST Webinar", callback_data="conference_info")
+    kb.button(text="About the Expert", callback_data="speaker_info")
+    kb.button(text="Educational Materials", callback_data="materials")
+    kb.button(text="IOST Information", callback_data="top_casinos")
+    kb.button(text="Crypto Tools", callback_data="trading_services")
     
     # Adjust the layout of the keyboard - 1 button per row
     kb.adjust(1)
@@ -48,9 +47,9 @@ def get_after_registration_kb() -> InlineKeyboardMarkup:
 def get_materials_kb() -> InlineKeyboardMarkup:
     kb = InlineKeyboardBuilder()
     
-    kb.button(text="Casino Basics", callback_data="basic_materials")
-    kb.button(text="Game Strategies", callback_data="advanced_materials")
-    kb.button(text="Casino Etiquette", callback_data="strategies_materials")
+    kb.button(text="IOST Basics", callback_data="basic_materials")
+    kb.button(text="Airdrop Strategies", callback_data="advanced_materials")
+    kb.button(text="Binance Guide", callback_data="strategies_materials")
     kb.button(text="Back to Menu", callback_data="main_menu")
     
     kb.adjust(1)
