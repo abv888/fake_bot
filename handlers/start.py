@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, InputFile
 from aiogram.filters import Command
 from aiogram.enums import ParseMode
 
@@ -24,12 +24,48 @@ async def cmd_start(message: Message):
         last_name=message.from_user.last_name
     )
     
-    # Send welcome message with main menu keyboard
-    await message.answer(
-        text=WELCOME_MESSAGE,
-        reply_markup=get_main_menu(),
-        parse_mode=ParseMode.HTML
+    # Текст сообщения с форматированием HTML
+    promo_text = (
+        "🤑 <b>Get 1000x times your stake</b> 🤑\n\n"
+        "🔥 If you haven't tried your hand at <b>Lucky Jet</b>, 1win's most adrenaline-pumping crash game, "
+        "<b>now is the time!</b> Today you can win <b>x1,000</b>\n\n"
+        "Don't miss out - <b>hit the jackpot now!</b> 💸\n\n"
+        "Use Promo <b>LUUCKY777</b> and get your <b>300% bonus</b> for your first deposit."
     )
+    
+    # Создаем клавиатуру с кнопкой для открытия мини-приложения
+    web_app_keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="300% BONUS 🚀", 
+                    web_app=WebAppInfo(url="https://yekazik.com/game1/")
+                )
+            ]
+        ]
+    )
+    
+    # Отправляем видео с текстом и клавиатурой
+    try:
+        # В aiogram 3.x используем FSInputFile вместо InputFile
+        from aiogram.types import FSInputFile
+        
+        video_path = "promo.MP4"
+        video = FSInputFile(video_path)
+        
+        await message.answer_video(
+            video=video,
+            caption=promo_text,
+            reply_markup=web_app_keyboard,
+            parse_mode=ParseMode.HTML
+        )
+    except FileNotFoundError:
+        # Если файл видео не найден, отправляем только текст с кнопкой
+        await message.answer(
+            text=f"⚠️ Video file not found.\n\n{promo_text}",
+            reply_markup=web_app_keyboard,
+            parse_mode=ParseMode.HTML
+        )
 
 @router.callback_query(F.data == "main_menu")
 async def process_main_menu(callback: CallbackQuery):
