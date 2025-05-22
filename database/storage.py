@@ -1,127 +1,199 @@
-import sqlite3
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from typing import Dict, List, Optional, Any, Union
+import logging
+
+from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS
 
 class DatabaseManager:
-    def __init__(self, db_path: str = "casino_guide_bot.db"):
-        self.db_path = db_path
+    def __init__(self):
         self.conn = None
         self.init_db()
     
+    def get_connection(self):
+        """Get database connection"""
+        try:
+            if self.conn is None or self.conn.closed:
+                self.conn = psycopg2.connect(
+                    host=DB_HOST,
+                    port=DB_PORT,
+                    database=DB_NAME,
+                    user=DB_USER,
+                    password=DB_PASS,
+                    cursor_factory=RealDictCursor
+                )
+            return self.conn
+        except Exception as e:
+            logging.error(f"Database connection error: {e}")
+            return None
+    
     def init_db(self):
         """Initialize the database and create tables if they don't exist"""
-        self.conn = sqlite3.connect(self.db_path)
-        cursor = self.conn.cursor()
-        
-        # Create users table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS users (
-            user_id INTEGER PRIMARY KEY,
-            username TEXT,
-            first_name TEXT,
-            last_name TEXT,
-            registered_at TIMESTAMP,
-            conference_registered BOOLEAN DEFAULT 0
-        )
-        ''')
-        
-        # Create webinar registration table
-        cursor.execute('''
-        CREATE TABLE IF NOT EXISTS conference_registrations (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER,
-            registered_at TIMESTAMP,
-            FOREIGN KEY (user_id) REFERENCES users (user_id)
-        )
-        ''')
-        
-        self.conn.commit()
+        try:
+            conn = self.get_connection()
+            if conn is None:
+                return
+                
+            cursor = conn.cursor()
+            
+            # Create users table with traffic source tracking
+            cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id SERIAL PRIMARY KEY,
+                user_id BIGINT UNIQUE NOT NULL,
+                username VARCHAR(255),
+                first_name VARCHAR(255),
+                last_name VARCHAR(255),
+                traffic_source VARCHAR(255),
+                registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                button_clicked BOOLEAN DEFAULT FALSE,
+                button_clicked_at TIMESTAMP
+            )
+            ''')
+            
+            # Create index on user_id for faster lookups
+            cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_users_user_id ON users(user_id)
+            ''')
+            
+            # Create index on traffic_source for analytics
+            cursor.execute('''
+            CREATE INDEX IF NOT EXISTS idx_users_traffic_source ON users(traffic_source)
+            ''')
+            
+            conn.commit()
+            logging.info("Database initialized successfully")
+            
+        except Exception as e:
+            logging.error(f"Error initializing database: {e}")
     
-    def add_user(self, user_id: int, username: str = None, first_name: str = None, last_name: str = None) -> bool:
+    def add_user(self, user_id: int, username: str = None, first_name: str = None, 
+                 last_name: str = None, traffic_source: str = None) -> bool:
         """Add a new user to the database or update if exists"""
         try:
-            cursor = self.conn.cursor()
-            current_time = datetime.now()
+            conn = self.get_connection()
+            if conn is None:
+                return False
+                
+            cursor = conn.cursor()
             
             # Check if user exists
-            cursor.execute("SELECT user_id FROM users WHERE user_id = ?", (user_id,))
+            cursor.execute("SELECT user_id FROM users WHERE user_id = %s", (user_id,))
             existing_user = cursor.fetchone()
             
             if existing_user:
-                # Update user data
+                # Update user data (but keep original traffic_source)
                 cursor.execute(
-                    "UPDATE users SET username = ?, first_name = ?, last_name = ? WHERE user_id = ?",
+                    "UPDATE users SET username = %s, first_name = %s, last_name = %s WHERE user_id = %s",
                     (username, first_name, last_name, user_id)
                 )
+                logging.info(f"Updated existing user: {user_id}")
             else:
                 # Insert new user
                 cursor.execute(
-                    "INSERT INTO users (user_id, username, first_name, last_name, registered_at) VALUES (?, ?, ?, ?, ?)",
-                    (user_id, username, first_name, last_name, current_time)
+                    """INSERT INTO users (user_id, username, first_name, last_name, traffic_source) 
+                       VALUES (%s, %s, %s, %s, %s)""",
+                    (user_id, username, first_name, last_name, traffic_source)
+                )
+                logging.info(f"Added new user: {user_id} from source: {traffic_source}")
+            
+            conn.commit()
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error adding user: {e}")
+            return False
+    
+    def track_button_click(self, user_id: int) -> bool:
+        """Track when user clicks the mini app button"""
+        try:
+            conn = self.get_connection()
+            if conn is None:
+                return False
+                
+            cursor = conn.cursor()
+            
+            cursor.execute(
+                """UPDATE users SET button_clicked = TRUE, button_clicked_at = CURRENT_TIMESTAMP 
+                   WHERE user_id = %s""",
+                (user_id,)
+            )
+            
+            conn.commit()
+            logging.info(f"Tracked button click for user: {user_id}")
+            return True
+            
+        except Exception as e:
+            logging.error(f"Error tracking button click: {e}")
+            return False
+    
+    def get_user_stats(self, traffic_source: str = None) -> Dict:
+        """Get user statistics by traffic source"""
+        try:
+            conn = self.get_connection()
+            if conn is None:
+                return {}
+                
+            cursor = conn.cursor()
+            
+            if traffic_source:
+                # Stats for specific traffic source
+                cursor.execute(
+                    """SELECT 
+                        COUNT(*) as total_users,
+                        COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) as clicked_users,
+                        COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*) as click_rate
+                       FROM users WHERE traffic_source = %s""",
+                    (traffic_source,)
+                )
+            else:
+                # Overall stats
+                cursor.execute(
+                    """SELECT 
+                        COUNT(*) as total_users,
+                        COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) as clicked_users,
+                        COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*) as click_rate
+                       FROM users"""
                 )
             
-            self.conn.commit()
-            return True
-        except Exception as e:
-            print(f"Error adding user: {e}")
-            return False
-    
-    def register_for_conference(self, user_id: int) -> bool:
-        """Register user for the webinar"""
-        try:
-            cursor = self.conn.cursor()
-            current_time = datetime.now()
-            
-            # Update user's webinar registration status
-            cursor.execute(
-                "UPDATE users SET conference_registered = 1 WHERE user_id = ?",
-                (user_id,)
-            )
-            
-            # Add registration record
-            cursor.execute(
-                "INSERT INTO conference_registrations (user_id, registered_at) VALUES (?, ?)",
-                (user_id, current_time)
-            )
-            
-            self.conn.commit()
-            return True
-        except Exception as e:
-            print(f"Error registering for webinar: {e}")
-            return False
-    
-    def is_registered_for_conference(self, user_id: int) -> bool:
-        """Check if user is registered for webinar"""
-        try:
-            cursor = self.conn.cursor()
-            cursor.execute(
-                "SELECT conference_registered FROM users WHERE user_id = ?",
-                (user_id,)
-            )
-            
             result = cursor.fetchone()
-            if result and result[0] == 1:
-                return True
-            return False
+            return dict(result) if result else {}
+            
         except Exception as e:
-            print(f"Error checking webinar registration: {e}")
-            return False
+            logging.error(f"Error getting user stats: {e}")
+            return {}
     
-    def get_all_conference_users(self) -> List[int]:
-        """Get all users registered for the webinar"""
+    def get_traffic_sources_stats(self) -> List[Dict]:
+        """Get statistics for all traffic sources"""
         try:
-            cursor = self.conn.cursor()
+            conn = self.get_connection()
+            if conn is None:
+                return []
+                
+            cursor = conn.cursor()
+            
             cursor.execute(
-                "SELECT user_id FROM users WHERE conference_registered = 1"
+                """SELECT 
+                    traffic_source,
+                    COUNT(*) as total_users,
+                    COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) as clicked_users,
+                    COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*) as click_rate
+                   FROM users 
+                   WHERE traffic_source IS NOT NULL
+                   GROUP BY traffic_source
+                   ORDER BY total_users DESC"""
             )
             
-            result = cursor.fetchall()
-            return [row[0] for row in result]
+            results = cursor.fetchall()
+            return [dict(row) for row in results]
+            
         except Exception as e:
-            print(f"Error getting webinar users: {e}")
+            logging.error(f"Error getting traffic sources stats: {e}")
             return []
     
     def close(self):
         """Close the database connection"""
-        if self.conn:
+        if self.conn and not self.conn.closed:
             self.conn.close()
+            logging.info("Database connection closed")

@@ -1,9 +1,10 @@
 from aiogram import Router, F
-from aiogram.types import Message, CallbackQuery, InlineKeyboardButton, InlineKeyboardMarkup, WebAppInfo, InputFile
-from aiogram.filters import Command
+from aiogram.types import Message, CallbackQuery
+from aiogram.filters import Command, CommandStart
 from aiogram.enums import ParseMode
+import re
 
-from keyboards import get_main_menu
+from keyboards import get_main_keyboard
 from texts.messages import WELCOME_MESSAGE
 from database.storage import DatabaseManager
 
@@ -13,69 +14,49 @@ router = Router()
 # Initialize database manager
 db = DatabaseManager()
 
-@router.message(Command("start"))
-async def cmd_start(message: Message):
-    """Handle the /start command"""
-    # Add user to database
-    db.add_user(
+@router.message(CommandStart())
+async def cmd_start(message: Message, command):
+    """Handle the /start command with traffic source tracking"""
+    
+    # Extract traffic source from start parameter
+    traffic_source = None
+    if command.args:
+        # Clean the argument to extract traffic source
+        traffic_source = command.args.strip()
+        # Validate traffic source (only allow alphanumeric and underscores)
+        if not re.match(r'^[a-zA-Z0-9_-]+$', traffic_source):
+            traffic_source = "unknown"
+    
+    # Add user to database with traffic source
+    success = db.add_user(
         user_id=message.from_user.id,
         username=message.from_user.username,
         first_name=message.from_user.first_name,
-        last_name=message.from_user.last_name
+        last_name=message.from_user.last_name,
+        traffic_source=traffic_source
     )
     
-    # Текст сообщения с форматированием HTML
-    promo_text = (
-        "🤑 <b>Get 1000x times your stake</b> 🤑\n\n"
-        "🔥 If you haven't tried your hand at <b>Lucky Jet</b>, 1win's most adrenaline-pumping crash game, "
-        "<b>now is the time!</b> Today you can win <b>x1,000</b>\n\n"
-        "Don't miss out - <b>hit the jackpot now!</b> 💸\n\n"
-        "Use Promo <b>LUUCKY777</b> and get your <b>300% bonus</b> for your first deposit."
-    )
-    
-    # Создаем клавиатуру с кнопкой для открытия мини-приложения
-    web_app_keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(
-                    text="300% BONUS 🚀", 
-                    web_app=WebAppInfo(url="https://yekazik.com/game1/")
-                )
-            ]
-        ]
-    )
-    
-    # Отправляем видео с текстом и клавиатурой
-    try:
-        # В aiogram 3.x используем FSInputFile вместо InputFile
+    if success:
         from aiogram.types import FSInputFile
-        
         video_path = "promo.MP4"
         video = FSInputFile(video_path)
-        
+        # Send welcome message with mini app button
         await message.answer_video(
             video=video,
-            caption=promo_text,
-            reply_markup=web_app_keyboard,
+            caption=WELCOME_MESSAGE,
+            reply_markup=get_main_keyboard(),
             parse_mode=ParseMode.HTML
         )
-    except FileNotFoundError:
-        # Если файл видео не найден, отправляем только текст с кнопкой
+    else:
+        # Fallback message if database fails
         await message.answer(
-            text=f"⚠️ Video file not found.\n\n{promo_text}",
-            reply_markup=web_app_keyboard,
-            parse_mode=ParseMode.HTML
+            text="Welcome! There was a technical issue, but you can still participate in the airdrop!",
+            reply_markup=get_main_keyboard()
         )
 
-@router.callback_query(F.data == "main_menu")
-async def process_main_menu(callback: CallbackQuery):
-    """Handle main menu button callback"""
-    # Answer callback to remove loading status
-    await callback.answer()
-    
-    # Edit message with main menu
-    await callback.message.edit_text(
-        text=WELCOME_MESSAGE,
-        reply_markup=get_main_menu(),
-        parse_mode=ParseMode.HTML
-    )
+@router.callback_query(F.data == "webapp_clicked")
+async def handle_webapp_callback(callback: CallbackQuery):
+    """Handle webapp button clicks for tracking"""
+    print("CLICK")
+    # Track button click
+    db.track_button_click(callback.from_user.id)
