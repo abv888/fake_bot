@@ -13,7 +13,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 from database.storage import DatabaseManager
 
 app = Flask(__name__)
-CORS(app, origins="*")
+@app.after_request
+def apply_cors(response):
+    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Headers'] = 'Content-Type'
+    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    return response
 
 # Инициализируем менеджер базы данных
 db = DatabaseManager()
@@ -48,9 +53,6 @@ def track_click():
     # CORS preflight
     if request.method == 'OPTIONS':
         response = jsonify({'status': 'ok'})
-        response.headers.add('Access-Control-Allow-Origin', '*')
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type')
-        response.headers.add('Access-Control-Allow-Methods', 'POST, OPTIONS')
         return response
     
     try:
