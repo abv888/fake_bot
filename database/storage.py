@@ -10,9 +10,13 @@ class AsyncDatabaseManager:
     def __init__(self):
         self.pool = None
         self.logger = logging.getLogger(__name__)
+        self._initialized = False  # Флаг инициализации
     
     async def init_pool(self):
         """Инициализация пула соединений"""
+        if self._initialized:
+            return  # Уже инициализирован
+            
         try:
             self.pool = await asyncpg.create_pool(
                 host=DB_HOST,
@@ -22,10 +26,14 @@ class AsyncDatabaseManager:
                 password=DB_PASS,
                 min_size=1,
                 max_size=10,
-                command_timeout=60
+                command_timeout=60,
+                server_settings={
+                    'jit': 'off'  # Отключает JIT для стабильности
+                }
             )
             self.logger.info("Async database pool initialized successfully")
             await self.init_tables()
+            self._initialized = True
         except Exception as e:
             self.logger.error(f"Failed to initialize database pool: {e}")
             raise
@@ -35,15 +43,20 @@ class AsyncDatabaseManager:
         if self.pool:
             await self.pool.close()
             self.logger.info("Database pool closed")
+            self._initialized = False
     
     @asynccontextmanager
     async def get_connection(self):
         """Контекстный менеджер для получения соединения из пула"""
-        if not self.pool:
+        if not self.pool or not self._initialized:
             await self.init_pool()
         
-        async with self.pool.acquire() as connection:
-            yield connection
+        try:
+            async with self.pool.acquire() as connection:
+                yield connection
+        except Exception as e:
+            self.logger.error(f"Error acquiring database connection: {e}")
+            raise
     
     async def init_tables(self):
         """Создание таблиц в базе данных"""
@@ -80,28 +93,19 @@ class AsyncDatabaseManager:
         """Добавление или обновление пользователя"""
         try:
             async with self.get_connection() as conn:
-                # Проверяем существует ли пользователь
-                existing_user = await conn.fetchrow(
-                    "SELECT user_id FROM users WHERE user_id = $1", user_id
+                # Используем UPSERT (INSERT ... ON CONFLICT) для атомарности
+                await conn.execute(
+                    """INSERT INTO users (user_id, username, first_name, last_name, traffic_source) 
+                       VALUES ($1, $2, $3, $4, $5)
+                       ON CONFLICT (user_id) 
+                       DO UPDATE SET 
+                           username = EXCLUDED.username,
+                           first_name = EXCLUDED.first_name,
+                           last_name = EXCLUDED.last_name""",
+                    user_id, username, first_name, last_name, traffic_source
                 )
                 
-                if existing_user:
-                    # Обновляем данные пользователя (сохраняем оригинальный traffic_source)
-                    await conn.execute(
-                        """UPDATE users SET username = $2, first_name = $3, last_name = $4 
-                           WHERE user_id = $1""",
-                        user_id, username, first_name, last_name
-                    )
-                    self.logger.info(f"Updated existing user: {user_id}")
-                else:
-                    # Добавляем нового пользователя
-                    await conn.execute(
-                        """INSERT INTO users (user_id, username, first_name, last_name, traffic_source) 
-                           VALUES ($1, $2, $3, $4, $5)""",
-                        user_id, username, first_name, last_name, traffic_source
-                    )
-                    self.logger.info(f"Added new user: {user_id} from source: {traffic_source}")
-                
+                self.logger.info(f"Added/updated user: {user_id} from source: {traffic_source}")
                 return True
         except Exception as e:
             self.logger.error(f"Error adding user {user_id}: {e}")
@@ -138,7 +142,12 @@ class AsyncDatabaseManager:
                         """SELECT 
                             COUNT(*) as total_users,
                             COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) as clicked_users,
-                            ROUND(COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*), 2) as click_rate
+                            ROUND(
+                                CASE 
+                                    WHEN COUNT(*) = 0 THEN 0 
+                                    ELSE COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*) 
+                                END, 2
+                            ) as click_rate
                            FROM users WHERE traffic_source = $1""",
                         traffic_source
                     )
@@ -148,7 +157,12 @@ class AsyncDatabaseManager:
                         """SELECT 
                             COUNT(*) as total_users,
                             COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) as clicked_users,
-                            ROUND(COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*), 2) as click_rate
+                            ROUND(
+                                CASE 
+                                    WHEN COUNT(*) = 0 THEN 0 
+                                    ELSE COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*) 
+                                END, 2
+                            ) as click_rate
                            FROM users"""
                     )
                 
@@ -166,7 +180,12 @@ class AsyncDatabaseManager:
                         traffic_source,
                         COUNT(*) as total_users,
                         COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) as clicked_users,
-                        ROUND(COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*), 2) as click_rate
+                        ROUND(
+                            CASE 
+                                WHEN COUNT(*) = 0 THEN 0 
+                                ELSE COUNT(CASE WHEN button_clicked = TRUE THEN 1 END) * 100.0 / COUNT(*) 
+                            END, 2
+                        ) as click_rate
                        FROM users 
                        WHERE traffic_source IS NOT NULL
                        GROUP BY traffic_source

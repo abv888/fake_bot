@@ -3,7 +3,6 @@
 import os
 import sys
 from flask import Flask, request, jsonify
-from flask_cors import CORS
 import logging
 import urllib.parse
 import json
@@ -14,7 +13,7 @@ from concurrent.futures import ThreadPoolExecutor
 # Добавляем путь к проекту для импорта модулей
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-# ИСПРАВЛЕНО: правильный импорт AsyncDatabaseManager
+# ВАЖНО: Используем старый синхронный DatabaseManager для Flask
 from database.storage import AsyncDatabaseManager
 
 app = Flask(__name__)
@@ -26,11 +25,8 @@ def apply_cors(response):
     response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS, GET'
     return response
 
-# Инициализируем менеджер базы данных
+# Используем синхронный менеджер базы данных
 db = AsyncDatabaseManager()
-
-# Executor для выполнения асинхронных функций в синхронном контексте
-executor = ThreadPoolExecutor(max_workers=4)
 
 # Настройка логирования
 logging.basicConfig(
@@ -44,20 +40,10 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-def run_async(coro):
-    """Запуск асинхронной функции в синхронном контексте"""
-    try:
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    
-    return loop.run_until_complete(coro)
-
 def parse_telegram_data(init_data):
     """Парсинг данных от Telegram WebApp"""
     try:
-        logger.info(f"Parsing init_data: {init_data[:100]}...")  # Логируем первые 100 символов
+        logger.info(f"Parsing init_data: {init_data[:100]}...")
         
         parsed_data = urllib.parse.parse_qs(init_data)
         user_json = parsed_data.get('user', ['{}'])[0]
@@ -115,8 +101,8 @@ def track_click():
         
         logger.info(f"Processing click for user_id: {user_id}")
         
-        # ИСПРАВЛЕНО: запускаем асинхронную функцию в синхронном контексте
-        success = run_async(db.track_button_click(user_id))
+        # ИСПРАВЛЕНО: используем синхронный метод
+        success = db.track_button_click(user_id)
         
         if success:
             logger.info(f"✅ Successfully tracked {click_type} for user {user_id}")
@@ -144,8 +130,8 @@ def track_click():
 def health_check():
     """Проверка состояния сервера"""
     try:
-        # ИСПРАВЛЕНО: запускаем асинхронную функцию в синхронном контексте
-        stats = run_async(db.get_user_stats())
+        # ИСПРАВЛЕНО: используем синхронный метод
+        stats = db.get_user_stats()
         
         return jsonify({
             'status': 'ok',
@@ -167,9 +153,9 @@ def health_check():
 def get_stats():
     """Получить статистику (для админов)"""
     try:
-        # ИСПРАВЛЕНО: запускаем асинхронные функции в синхронном контексте
-        overall_stats = run_async(db.get_user_stats())
-        traffic_stats = run_async(db.get_traffic_sources_stats())
+        # ИСПРАВЛЕНО: используем синхронные методы
+        overall_stats = db.get_user_stats()
+        traffic_stats = db.get_traffic_sources_stats()
         
         return jsonify({
             'overall': overall_stats,
@@ -214,36 +200,8 @@ def not_found(error):
 def internal_error(error):
     return jsonify({'error': 'Internal server error'}), 500
 
-# Инициализация базы данных при запуске
-def init_database():
-    """Инициализация базы данных"""
-    try:
-        logger.info("Initializing database...")
-        run_async(db.init_pool())
-        logger.info("✅ Database initialized successfully")
-    except Exception as e:
-        logger.error(f"❌ Failed to initialize database: {e}")
-        raise
-
 if __name__ == '__main__':
     # Создаем папку для логов если её нет
-    os.makedirs('logs', exist_ok=True)
-    
-    logger.info("Starting IOST Click Tracker Server...")
-    
-    # Инициализируем базу данных
-    init_database()
-    
-    # Получаем порт из переменных окружения или используем 5000
-    port = int(os.environ.get('PORT', 5000))
-    
-    # Запускаем сервер
-    app.run(
-        host='0.0.0.0',  # Слушаем на всех интерфейсах
-        port=port,
-        debug=False,
-        threaded=True
-    )
     os.makedirs('logs', exist_ok=True)
     
     logger.info("Starting IOST Click Tracker Server...")
