@@ -7,17 +7,35 @@ from contextlib import asynccontextmanager
 from config import DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASS
 
 class AsyncDatabaseManager:
+    _instance = None
+    _initialized = False
+    
+    def __new__(cls):
+        if cls._instance is None:
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
     def __init__(self):
+        if hasattr(self, 'pool'):
+            return  # Уже инициализирован
+            
         self.pool = None
         self.logger = logging.getLogger(__name__)
-        self._initialized = False  # Флаг инициализации
     
     async def init_pool(self):
         """Инициализация пула соединений"""
-        if self._initialized:
+        if self._initialized and self.pool and not self.pool._closed:
+            self.logger.debug("Database pool already initialized, skipping")
             return  # Уже инициализирован
             
         try:
+            self.logger.info("Initializing async database pool...")
+            
+            # Закрываем старый пул если есть
+            if self.pool and not self.pool._closed:
+                await self.pool.close()
+            
+            # Создаем новый пул
             self.pool = await asyncpg.create_pool(
                 host=DB_HOST,
                 port=DB_PORT,
@@ -25,31 +43,41 @@ class AsyncDatabaseManager:
                 user=DB_USER,
                 password=DB_PASS,
                 min_size=1,      # Минимум 1 соединение
-                max_size=3,      # Максимум 3 соединения (было 10)
+                max_size=3,      # Максимум 3 соединения
                 command_timeout=30,  # Уменьшен таймаут
                 server_settings={
                     'jit': 'off'  # Отключает JIT для стабильности
                 }
             )
-            self.logger.info("Async database pool initialized successfully")
+            
+            # Устанавливаем флаг ПЕРЕД init_tables
+            AsyncDatabaseManager._initialized = True
+            
+            self.logger.info("✅ Async database pool initialized successfully")
+            
+            # Инициализируем таблицы только один раз
             await self.init_tables()
-            self._initialized = True
+            
         except Exception as e:
             self.logger.error(f"Failed to initialize database pool: {e}")
-            raise
+            AsyncDatabaseManager._initialized = False
+            # Не поднимаем исключение - позволяем боту работать без БД
     
     async def close_pool(self):
         """Закрытие пула соединений"""
-        if self.pool:
+        if self.pool and not self.pool._closed:
             await self.pool.close()
             self.logger.info("Database pool closed")
-            self._initialized = False
+        AsyncDatabaseManager._initialized = False
     
     @asynccontextmanager
     async def get_connection(self):
         """Контекстный менеджер для получения соединения из пула"""
-        if not self.pool or not self._initialized:
+        if not AsyncDatabaseManager._initialized or not self.pool or self.pool._closed:
             await self.init_pool()
+        
+        if not self.pool or not AsyncDatabaseManager._initialized:
+            raise Exception("Database pool is not available")
         
         try:
             async with self.pool.acquire() as connection:
@@ -61,6 +89,8 @@ class AsyncDatabaseManager:
     async def init_tables(self):
         """Создание таблиц в базе данных"""
         try:
+            self.logger.info("Creating database tables if not exist...")
+            
             async with self.get_connection() as conn:
                 # Создание таблицы пользователей
                 await conn.execute('''
@@ -83,10 +113,10 @@ class AsyncDatabaseManager:
                 await conn.execute('CREATE INDEX IF NOT EXISTS idx_users_registered_at ON users(registered_at)')
                 await conn.execute('CREATE INDEX IF NOT EXISTS idx_users_button_clicked ON users(button_clicked)')
                 
-                self.logger.info("Database tables initialized successfully")
+                self.logger.info("✅ Database tables initialized successfully")
         except Exception as e:
             self.logger.error(f"Error initializing tables: {e}")
-            raise
+            # Не поднимаем исключение
     
     async def add_user(self, user_id: int, username: str = None, first_name: str = None, 
                       last_name: str = None, traffic_source: str = None) -> bool:
