@@ -47,7 +47,7 @@ def parse_telegram_data(init_data):
         return None, None
 
 @app.route('/api/track-click', methods=['POST', 'OPTIONS'])
-def track_click():
+async def track_click():
     """Эндпоинт для трекинга кликов"""
     
     # CORS preflight
@@ -71,7 +71,7 @@ def track_click():
             return jsonify({'error': 'Invalid user data'}), 400
         
         # Трекаем клик в базе данных
-        success = db.track_button_click(user_id)
+        success = await db.track_button_click(user_id)
         
         if success:
             logger.info(f"Successfully tracked {click_type} for user {user_id}")
@@ -96,11 +96,11 @@ def track_click():
         return jsonify({'error': 'Internal server error'}), 500
 
 @app.route('/health', methods=['GET'])
-def health_check():
+async def health_check():
     """Проверка состояния сервера"""
     try:
         # Проверяем подключение к базе данных
-        stats = db.get_user_stats()
+        stats = await db.get_user_stats()
         
         return jsonify({
             'status': 'ok',
@@ -119,11 +119,11 @@ def health_check():
         }), 500
 
 @app.route('/api/stats', methods=['GET'])
-def get_stats():
+async def get_stats():
     """Получить статистику (для админов)"""
     try:
-        overall_stats = db.get_user_stats()
-        traffic_stats = db.get_traffic_sources_stats()
+        overall_stats = await db.get_user_stats()
+        traffic_stats = await db.get_traffic_sources_stats()
         
         return jsonify({
             'overall': overall_stats,
