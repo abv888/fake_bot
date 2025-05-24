@@ -10,7 +10,7 @@ from datetime import datetime
 # Добавляем путь к проекту для импорта модулей
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
-from database.storage import DatabaseManager
+from database.storage import AsyncDatabaseManager
 
 app = Flask(__name__)
 @app.after_request
@@ -21,7 +21,7 @@ def apply_cors(response):
     return response
 
 # Инициализируем менеджер базы данных
-db = DatabaseManager()
+db = AsyncDatabaseManager()
 
 # Настройка логирования
 logging.basicConfig(
