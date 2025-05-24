@@ -6,13 +6,13 @@ import re
 
 from keyboards import get_main_keyboard
 from texts.messages import WELCOME_MESSAGE
-from database.storage import DatabaseManager
+from database.storage import AsyncDatabaseManager
 
 # Create router instance
 router = Router()
 
 # Initialize database manager
-db = DatabaseManager()
+db = AsyncDatabaseManager()
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, command):
@@ -28,7 +28,7 @@ async def cmd_start(message: Message, command):
             traffic_source = "unknown"
     
     # Add user to database with traffic source
-    success = db.add_user(
+    await db.add_user(
         user_id=message.from_user.id,
         username=message.from_user.username,
         first_name=message.from_user.first_name,
@@ -36,23 +36,17 @@ async def cmd_start(message: Message, command):
         traffic_source=traffic_source
     )
     
-    if success:
-        from aiogram.types import FSInputFile
-        video_path = "promo.MP4"
-        video = FSInputFile(video_path)
-        # Send welcome message with mini app button
-        await message.answer_video(
-            video=video,
-            caption=WELCOME_MESSAGE,
-            reply_markup=get_main_keyboard(),
-            parse_mode=ParseMode.HTML
-        )
-    else:
-        # Fallback message if database fails
-        await message.answer(
-            text="Welcome! There was a technical issue, but you can still participate in the airdrop!",
-            reply_markup=get_main_keyboard()
-        )
+    from aiogram.types import FSInputFile
+    video_path = "promo.MP4"
+    video = FSInputFile(video_path)
+    # Send welcome message with mini app button
+    await message.answer_video(
+        video=video,
+        caption=WELCOME_MESSAGE,
+        reply_markup=get_main_keyboard(),
+        parse_mode=ParseMode.HTML
+    )
+
 
 @router.callback_query(F.data == "webapp_clicked")
 async def handle_webapp_callback(callback: CallbackQuery):
