@@ -14,7 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 # ВАЖНО: Используем старый синхронный DatabaseManager для Flask
-from database.storage import AsyncDatabaseManager
+from database.storage import DatabaseManager
 
 app = Flask(__name__)
 
@@ -26,7 +26,7 @@ def apply_cors(response):
     return response
 
 # Используем синхронный менеджер базы данных
-db = AsyncDatabaseManager()
+db = DatabaseManager()
 
 # Настройка логирования
 logging.basicConfig(

@@ -9,7 +9,7 @@ from aiogram.client.default import DefaultBotProperties
 
 from config import BOT_TOKEN
 from handlers.start import router as start_router
-from database.storage import async_db
+from database.async_storage import async_db
 
 # Create logs directory if it doesn't exist
 os.makedirs('logs', exist_ok=True)

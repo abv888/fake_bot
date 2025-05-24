@@ -6,7 +6,7 @@ import re
 
 from keyboards import get_main_keyboard
 from texts.messages import WELCOME_MESSAGE
-from database.storage import AsyncDatabaseManager
+from database.async_storage import AsyncDatabaseManager
 
 # Create router instance
 router = Router()

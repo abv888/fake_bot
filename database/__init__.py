@@ -1,3 +1,4 @@
-from database.storage import AsyncDatabaseManager, async_db
+from database.storage import DatabaseManager
+from database.async_storage import AsyncDatabaseManager, async_db
 
-__all__ = ['AsyncDatabaseManager', 'async_db']
+__all__ = ['DatabaseManager', 'AsyncDatabaseManager', 'async_db']
