@@ -24,9 +24,9 @@ class AsyncDatabaseManager:
                 database=DB_NAME,
                 user=DB_USER,
                 password=DB_PASS,
-                min_size=1,
-                max_size=10,
-                command_timeout=60,
+                min_size=1,      # Минимум 1 соединение
+                max_size=3,      # Максимум 3 соединения (было 10)
+                command_timeout=30,  # Уменьшен таймаут
                 server_settings={
                     'jit': 'off'  # Отключает JIT для стабильности
                 }
