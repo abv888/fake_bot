@@ -2,7 +2,7 @@ from config import CONFERENCE_DATE, CONFERENCE_TIME
 
 # Main messages
 WELCOME_MESSAGE = (
-    f"Welcome to the 'JET LUCK' game community!\n\n"
+    f"Welcome to the <b>Jet Luck</b> game community!\n\n"
     f"In this bot, you'll discover useful and up-to-date information about this game, "
     f"responsible gaming tips, strategies for various games, and receive "
     f"valuable materials to enhance your knowledge about the gaming industry.\n\n"
