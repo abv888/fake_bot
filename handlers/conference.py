@@ -41,7 +41,7 @@ async def process_register_conference(callback: CallbackQuery):
     # Check if already registered
     if db.is_registered_for_conference(callback.from_user.id):
         await callback.message.edit_text(
-            text="You are already registered for the IOST airdrop webinar!",
+            text="You are already registered for the $HUMA webinar!",
             reply_markup=get_after_registration_kb()
         )
         return
